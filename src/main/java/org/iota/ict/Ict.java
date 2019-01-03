@@ -1,9 +1,7 @@
 package org.iota.ict;
 
-import com.sun.org.apache.xpath.internal.operations.Mod;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.iota.ict.ixi.IxiModule;
 import org.iota.ict.ixi.ModuleLoader;
 import org.iota.ict.model.RingTangle;
 import org.iota.ict.model.Tangle;
@@ -74,10 +72,10 @@ public class Ict {
         receiver.start();
 
         try {
-            new ModuleLoader(this).load();
-        } catch (ModuleLoader.ModuleLoadingException e) {
-            ErrorHandler.handleError(LOGGER, e, "could not load modules");
-            throw new RuntimeException(e);
+            ModuleLoader.load(this);
+        } catch (ModuleLoader.ModuleLoadingException moduleLoadingException) {
+            ErrorHandler.handleError(LOGGER, moduleLoadingException, "could not load modules");
+            throw new RuntimeException(moduleLoadingException);
         }
 
     }

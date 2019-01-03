@@ -12,15 +12,13 @@ import java.util.List;
 public class ModuleLoader {
 
     private static final File DEFAULT_MODULE_FOLDER = new File("modules/org/iota/ict/ixi/");
-    private Ict ict;
 
-    public ModuleLoader(Ict ict) {
-        this.ict = ict;
+    static {
         if(!DEFAULT_MODULE_FOLDER.exists())
             DEFAULT_MODULE_FOLDER.mkdirs();
     }
 
-    public List<IxiModule> load() throws ModuleLoadingException {
+    public static List<IxiModule> load(Ict ict) throws ModuleLoadingException {
 
         List<IxiModule> ret = new ArrayList<>();
 
@@ -46,7 +44,7 @@ public class ModuleLoader {
             return ret;
 
         } catch (Throwable t) {
-            throw new RuntimeException(t.getMessage());
+            throw new ModuleLoadingException(t.getMessage());
         }
 
     }
