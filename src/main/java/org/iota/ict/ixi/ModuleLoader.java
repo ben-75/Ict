@@ -20,9 +20,9 @@ public class ModuleLoader {
 
     public static List<IxiModule> load(Ict ict) throws ModuleLoadingException {
 
-        List<IxiModule> ret = new ArrayList<>();
-
         try {
+
+            List<IxiModule> ret = new ArrayList<>();
 
             for(File file: DEFAULT_MODULE_FOLDER.listFiles()) {
 
@@ -56,4 +56,3 @@ public class ModuleLoader {
     }
 
 }
-

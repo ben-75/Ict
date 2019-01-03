@@ -2,6 +2,7 @@ package org.iota.ict;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.iota.ict.ixi.IxiModule;
 import org.iota.ict.ixi.ModuleLoader;
 import org.iota.ict.model.RingTangle;
 import org.iota.ict.model.Tangle;
@@ -31,6 +32,7 @@ import java.util.List;
  */
 public class Ict {
 
+    protected final List<IxiModule> modules;
     protected final List<Neighbor> neighbors = new LinkedList<>();
     protected final Sender sender;
     protected final Receiver receiver;
@@ -72,7 +74,7 @@ public class Ict {
         receiver.start();
 
         try {
-            ModuleLoader.load(this);
+            modules = ModuleLoader.load(this);
         } catch (ModuleLoader.ModuleLoadingException moduleLoadingException) {
             ErrorHandler.handleError(LOGGER, moduleLoadingException, "could not load modules");
             throw new RuntimeException(moduleLoadingException);
@@ -209,6 +211,8 @@ public class Ict {
             sender.terminate();
             receiver.interrupt();
             eventDispatcher.terminate();
+            for(IxiModule module: modules)
+                module.onIctShutdown();
         }
     }
 
