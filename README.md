@@ -15,7 +15,7 @@ This modular design enables the customization of the core node, allowing for all
 This method is recommended for beginners.
 
 1. Go to [releases](https://github.com/iotaledger/ict/releases).
-2. Download **ict-{VERSION}.jar** from the most recent release.
+2. Download **ict.jar** from the most recent release.
 3. Move the .jar file to your favourite directory/folder.
 
 
@@ -43,10 +43,10 @@ You will need the JRE (Java Runtime Environment) or JDK (Java Development Kit).
 cd Desktop/ict/
 
 # 2) run the .jar file
-java -jar ict-{VERSION}.jar
+java -jar ict.jar
 ```
 
-On the very first start, this will create a configuration file (**ict.cfg**). Restart your Ict after modifying the configuration.
+Use `--config-create` option to create a configuration file (**ict.cfg**). Restart your Ict after modifying the configuration.
 
 ### Arguments
 
@@ -54,7 +54,9 @@ You can pass the following arguments to the .jar file when running it.
 
 Argument|Alias|Example|Description
 ---|---|---|---
-`-config`|`-c`|`-config ict.cfg`|Loads the Ict configuration from the specified file.
+`--config`|`-c`|`--config ict.cfg`|Loads the Ict configuration from the specified file.
+`--config-print`| |`--config-print`|Print the Ict configuration to stdout and exit.
+`--config-create`| |`--config-create`|Write the Ict configuration './ict.cfg'.
 
 ## IXI Modules
 
