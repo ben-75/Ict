@@ -25,7 +25,6 @@ public class Properties {
     public double antiSpamRel = 5;
     public long amtiSpamAbs = 1000;
     public boolean spamEnabled = false;
-    public boolean ixiEnabled = false;
     public long tangleCapacity = 10000;
     public long minForwardDelay = 0;
     public long maxForwardDelay = 200;
@@ -61,7 +60,6 @@ public class Properties {
         roundDuration = readLongProperty(propObject, Property.round_duration, 100, Long.MAX_VALUE, DEFAULT_PROPERTIES.roundDuration);
         neighbors = neighborsFromString(propObject.getProperty(Property.neighbors.name(), ""));
         spamEnabled = propObject.getProperty(Property.spam_enabled.name(), DEFAULT_PROPERTIES.spamEnabled + "").toLowerCase().equals("true");
-        ixiEnabled = propObject.getProperty(Property.ixi_enabled.name(), DEFAULT_PROPERTIES.ixiEnabled + "").toLowerCase().equals("true");
     }
 
     private static List<String> stringListFromString(String string) {
@@ -168,7 +166,6 @@ public class Properties {
         propObject.setProperty(Property.round_duration.name(), roundDuration + "");
         propObject.setProperty(Property.neighbors.name(), neighborsToString());
         propObject.setProperty(Property.spam_enabled.name(), spamEnabled + "");
-        propObject.setProperty(Property.ixi_enabled.name(), ixiEnabled + "");
         return propObject;
     }
 
@@ -193,7 +190,6 @@ public class Properties {
         round_duration,
         neighbors,
         spam_enabled,
-        ixi_enabled,
         name;
     }
 
