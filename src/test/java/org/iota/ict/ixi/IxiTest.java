@@ -24,7 +24,6 @@ public class IxiTest {
         Properties properties = new Properties();
         properties.minForwardDelay = 0;
         properties.maxForwardDelay = 5;
-        properties.ixiEnabled = true;
         ict = new Ict(properties);
         sleep(100);
 
