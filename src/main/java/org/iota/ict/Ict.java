@@ -1,8 +1,10 @@
 package org.iota.ict;
 
+import com.sun.org.apache.xpath.internal.operations.Mod;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.iota.ict.ixi.RemoteIctImplementation;
+import org.iota.ict.ixi.IxiModule;
+import org.iota.ict.ixi.ModuleLoader;
 import org.iota.ict.model.RingTangle;
 import org.iota.ict.model.Tangle;
 import org.iota.ict.model.TransactionBuilder;
@@ -30,6 +32,7 @@ import java.util.List;
  * therefore be seen as a hub of all those components which, when working together, form an Ict node.
  */
 public class Ict {
+
     protected final List<Neighbor> neighbors = new LinkedList<>();
     protected final Sender sender;
     protected final Receiver receiver;
@@ -39,15 +42,15 @@ public class Ict {
     protected final DatagramSocket socket;
     protected final InetSocketAddress address;
     protected final GossipEventDispatcher eventDispatcher = new GossipEventDispatcher();
-    protected final RemoteIctImplementation remoteIctImplementation;
     public final static Logger LOGGER = LogManager.getLogger(Ict.class);
-    protected int round = 0;
+    protected int round;
 
     /**
      * @param properties The properties to use for this Ict. Changing them afterwards might or might not work for some properties.
      *                   TODO allow them to be configured afterwards.
      */
     public Ict(Properties properties) {
+
         this.properties = properties;
         this.tangle = new RingTangle(this, properties.tangleCapacity);
         this.address = new InetSocketAddress(properties.host, properties.port);
@@ -70,16 +73,13 @@ public class Ict {
         sender.start();
         receiver.start();
 
-        remoteIctImplementation = properties.ixiEnabled ? createRemoteIctImplementation() : null;
-    }
-
-    private RemoteIctImplementation createRemoteIctImplementation() {
         try {
-            return new RemoteIctImplementation(this);
-        } catch (Throwable t) {
-            ErrorHandler.handleError(LOGGER, t, "failed to enable IXI");
-            return null;
+            new ModuleLoader(this).load();
+        } catch (ModuleLoader.ModuleLoadingException e) {
+            ErrorHandler.handleError(LOGGER, e, "could not load modules");
+            throw new RuntimeException(e);
         }
+
     }
 
     /**
@@ -211,9 +211,6 @@ public class Ict {
             sender.terminate();
             receiver.interrupt();
             eventDispatcher.terminate();
-            if (remoteIctImplementation != null)
-                remoteIctImplementation.terminate();
-            // TODO notify IXI modules
         }
     }
 

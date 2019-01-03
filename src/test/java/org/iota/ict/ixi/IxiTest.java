@@ -28,13 +28,13 @@ public class IxiTest {
         ict = new Ict(properties);
         sleep(100);
 
-        ixi = new TestIxi(properties.name);
+        ixi = new TestIxi(new IctProxy(ict));
     }
 
     @Test
     public void testOrder() {
         testIxiFilter();
-        testNotTransmittingBranchOrTrunk();
+        //testNotTransmittingBranchOrTrunk();
         // other order fails TODO find out why
     }
 
@@ -50,8 +50,8 @@ public class IxiTest {
         ixi.submit(transaction);
         sleep(100);
 
-        Assert.assertNotNull("Ixi did not receive event.", ixi.receivedGossipSubmitEvent);
-        Assert.assertEquals("Ixi did not receive correct information.", message, ixi.receivedGossipSubmitEvent.getTransaction().decodedSignatureFragments);
+        Assert.assertNotNull("IxI did not receive event.", ixi.receivedGossipSubmitEvent);
+        Assert.assertEquals("IxI did not receive correct information.", message, ixi.receivedGossipSubmitEvent.getTransaction().decodedSignatureFragments);
         Assert.assertNotNull("Ict did not store transaction submitted by ixi.", ict.getTangle().findTransactionByHash(transaction.hash));
         Assert.assertEquals("Ict did not store transaction submitted by ixi.", ixi.findTransactionsByAddress(transaction.address).size(), 1);
 
@@ -64,6 +64,7 @@ public class IxiTest {
         Assert.assertNull("Gossip filter let transaction from unwatched address pass.", ixi.receivedGossipSubmitEvent);
     }
 
+    // Since RMI got removed and modules are integrated directly, serialisation is not needed in this context, test became irrelevant.
     public void testNotTransmittingBranchOrTrunk() {
 
         ixi.setGossipFilter(new GossipFilter());
@@ -102,13 +103,13 @@ public class IxiTest {
     }
 }
 
-class TestIxi extends IxiModule {
+class TestIxi extends DefaultIxiModule {
 
     static final String NAME = "simple.ixi";
     GossipSubmitEvent receivedGossipSubmitEvent = null;
 
-    TestIxi(String ictName) {
-        super(NAME, ictName);
+    public TestIxi(IctProxy ict) {
+        super(ict);
     }
 
     @Override
