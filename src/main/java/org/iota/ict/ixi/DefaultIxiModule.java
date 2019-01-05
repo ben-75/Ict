@@ -3,7 +3,7 @@ package org.iota.ict.ixi;
 import org.iota.ict.network.event.GossipReceiveEvent;
 import org.iota.ict.network.event.GossipSubmitEvent;
 
-public class DefaultIxiModule extends IxiModule {
+public abstract class DefaultIxiModule extends IxiModule {
 
     public DefaultIxiModule(IctProxy ict) {
         super(ict);
