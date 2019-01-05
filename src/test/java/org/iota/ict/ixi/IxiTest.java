@@ -46,18 +46,18 @@ public class IxiTest {
         ixi.setGossipFilter(new GossipFilter().watchAddress(builder.address));
 
         Transaction transaction = builder.build();
-        ixi.submit(transaction);
+        ixi.getIct().submit(transaction);
         sleep(100);
 
         Assert.assertNotNull("IxI did not receive event.", ixi.receivedGossipSubmitEvent);
         Assert.assertEquals("IxI did not receive correct information.", message, ixi.receivedGossipSubmitEvent.getTransaction().decodedSignatureFragments);
         Assert.assertNotNull("Ict did not store transaction submitted by ixi.", ict.getTangle().findTransactionByHash(transaction.hash));
-        Assert.assertEquals("Ict did not store transaction submitted by ixi.", ixi.findTransactionsByAddress(transaction.address).size(), 1);
+        Assert.assertEquals("Ict did not store transaction submitted by ixi.", ixi.getIct().findTransactionsByAddress(transaction.address).size(), 1);
 
         ixi.receivedGossipSubmitEvent = null;
         builder.address = Trytes.randomSequenceOfLength(Transaction.Field.ADDRESS.tryteLength);
         transaction = builder.build();
-        ixi.submit(transaction);
+        ixi.getIct().submit(transaction);
         sleep(200);
 
         Assert.assertNull("Gossip filter let transaction from unwatched address pass.", ixi.receivedGossipSubmitEvent);
@@ -78,8 +78,8 @@ public class IxiTest {
         ict.submit(referencer);
         sleep(200);
 
-        Transaction requestedReferencer = ixi.findTransactionByHash(referencer.hash);
-        Transaction requestedBranch = ixi.findTransactionByHash(referencer.branchHash);
+        Transaction requestedReferencer = ixi.getIct().findTransactionByHash(referencer.hash);
+        Transaction requestedBranch = ixi.getIct().findTransactionByHash(referencer.branchHash);
 
         Assert.assertNotNull("IXI module could not request referencing transaction.", requestedReferencer);
         Assert.assertNotNull("IXI module could not request referenced transaction.", requestedBranch);
