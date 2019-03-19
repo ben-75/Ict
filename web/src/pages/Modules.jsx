@@ -201,7 +201,7 @@ class Modules extends Component {
 											<Icon size={20} icon="close" />
 											{name}
 											<nav>
-												{gui_port>0 && (<a
+												{gui_port>-1 && (<a
 													href={moduleURI(name, gui_port)}
 													className="button success small"
 													target="_blank"
