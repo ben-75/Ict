@@ -14,27 +14,48 @@ public class LedgerValidator {
 
     protected final Ixi ixi;
 
-    protected final Map<String, BigInteger> initialBalances = new HashMap<>();
+    protected final Map<String, BigInteger> initialBalances;
     protected final Map<String, String> dependencyByTransfer = new HashMap<>();
     protected final Set<String> invalidTransfers = new HashSet<>(), validTransfers = new HashSet<>();
 
     LedgerValidator(Ixi ixi) {
         this.ixi = ixi;
         validTransfers.add(Transaction.NULL_TRANSACTION.hash);
+        initialBalances = new HashMap<>();
+    }
+
+    LedgerValidator(Ixi ixi, Map<String, BigInteger> initialBalances) {
+        this.ixi = ixi;
+        validTransfers.add(Transaction.NULL_TRANSACTION.hash);
+        this.initialBalances = new HashMap<>(initialBalances);
     }
 
     public void changeInitialBalance(String address, BigInteger toAdd) {
         initialBalances.put(address, initialBalances.containsKey(address) ? initialBalances.get(address).add(toAdd) : toAdd);
     }
 
-    public boolean areTanglesCompatible(String rootAHash, String rootBHash) {
+    public boolean areTanglesCompatible(String hashA, String hashB, String hashC, String hashD) {
+        Transaction refA = ixi.findTransactionByHash(hashA);
+        Transaction refB = ixi.findTransactionByHash(hashB);
+        Transaction refC = ixi.findTransactionByHash(hashC);
+        Transaction refD = ixi.findTransactionByHash(hashD);
+        return isTangleSolid(merge(merge(refA, refB), merge(refC, refD)));
+    }
+
+    public boolean areTanglesCompatible(String hashA, String hashB) {
+        Transaction refA = ixi.findTransactionByHash(hashA);
+        Transaction refB = ixi.findTransactionByHash(hashB);
+        return isTangleSolid(merge(refA, refB));
+    }
+
+    private Transaction merge(Transaction refA, Transaction refB) {
         TransactionBuilder builder = new TransactionBuilder();
-        builder.trunkHash = rootAHash;
-        builder.branchHash = rootBHash;
+        builder.trunkHash = refA.hash;
+        builder.branchHash = refB.hash;
         Transaction merge = builder.build();
-        merge.setTrunk(ixi.findTransactionByHash(rootAHash));
-        merge.setBranch(ixi.findTransactionByHash(rootBHash));
-        return isTangleSolid(merge);
+        merge.setTrunk(refA);
+        merge.setBranch(refB);
+        return merge;
     }
 
     public boolean isTangleSolid(String rootHash) {

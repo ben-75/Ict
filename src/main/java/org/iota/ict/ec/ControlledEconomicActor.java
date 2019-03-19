@@ -7,6 +7,7 @@ import org.iota.ict.model.transfer.OutputBuilder;
 import org.iota.ict.model.transfer.TransferBuilder;
 import org.iota.ict.model.transaction.TransactionBuilder;
 import org.iota.ict.utils.Trytes;
+import org.iota.ict.utils.crypto.AutoIndexedMerkleTree;
 import org.iota.ict.utils.crypto.MerkleTree;
 import org.iota.ict.utils.crypto.SignatureSchemeImplementation;
 
@@ -21,37 +22,38 @@ import java.util.Set;
  * */
 public class ControlledEconomicActor extends EconomicActor {
 
-    protected final MerkleTree merkleTree;
-    protected int keyIndex;
+    protected final AutoIndexedMerkleTree merkleTree;
 
-    public ControlledEconomicActor(MerkleTree merkleTree, int keyIndex) {
+    public ControlledEconomicActor(AutoIndexedMerkleTree merkleTree) {
         super(merkleTree.getAddress());
         this.merkleTree = merkleTree;
-        this.keyIndex = keyIndex;
     }
 
-    public Bundle issueMarker(String trunk, String branch, int securityLevel, double confidence) {
+    public Bundle buildMarker(String trunk, String branch, double confidence) {
 
         Set<OutputBuilder> outputs = new HashSet<>();
 
         String messageToSign =  messageToSign(trunk, branch);
-        SignatureSchemeImplementation.Signature signature = merkleTree.sign(keyIndex++, messageToSign);
+        SignatureSchemeImplementation.Signature signature = merkleTree.sign(messageToSign);
         assert signature.deriveAddress().equals(address);
         outputs.add(new OutputBuilder(address, BigInteger.ZERO, signature.toString()));
 
-        TransferBuilder transferBuilder =  new TransferBuilder(new HashSet<InputBuilder>(), outputs, securityLevel);
+        TransferBuilder transferBuilder =  new TransferBuilder(new HashSet<InputBuilder>(), outputs, merkleTree.getSecurityLevel());
         BundleBuilder bundleBuilder = transferBuilder.build();
 
         List<TransactionBuilder> tailToHead = bundleBuilder.getTailToHead();
         tailToHead.get(0).branchHash = branch;
         tailToHead.get(0).trunkHash = trunk;
         tailToHead.get(0).tag = encodeConfidence(confidence, Transaction.Field.TAG.tryteLength);
-        Bundle bundle = bundleBuilder.build();
-        return bundle;
+        return bundleBuilder.build();
     }
 
-    private static String encodeConfidence(double confidence, int trytesLength) {
+    protected static String encodeConfidence(double confidence, int padLength) {
+        return Trytes.padRight(encodeConfidence(confidence), padLength);
+    }
+
+    protected static String encodeConfidence(double confidence) {
         int discreteConfidence = (int)Math.round(confidence * 26);
-        return Trytes.padRight(Trytes.TRYTE_CHARS[discreteConfidence]+"", trytesLength);
+        return Trytes.TRYTE_CHARS[discreteConfidence]+"";
     }
 }
