@@ -1,5 +1,7 @@
 package org.iota.ict.utils;
 
+import org.iota.ict.eee.ChainedEnvironment;
+import org.iota.ict.eee.Environment;
 import org.iota.ict.model.transaction.Transaction;
 
 import java.io.File;
@@ -30,7 +32,6 @@ public class Constants {
 
     public static final int CURL_ROUNDS_TRANSACTION_HASH = 27;
     public static final int CURL_ROUNDS_BUNDLE_HASH = 27;
-    public static final int CURL_ROUNDS_EC_ADDRESS_DERIVATION = 27;
 
     public static RunModus RUN_MODUS = RunModus.TESTING;
     public static final int MIN_WEIGHT_MAGNITUDE = 3;
@@ -43,6 +44,11 @@ public class Constants {
     public static final class HashFlags {
         public static final int BUNDLE_HEAD_FLAG = 1;
         public static final int BUNDLE_TAIL_FLAG = 2;
+    }
+
+    public static final class Environments {
+        public static final Environment GOSSIP = new Environment("gossip");
+        public static final ChainedEnvironment GOSSIP_PREPROCESSOR_CHAIN = new ChainedEnvironment("gossip_chain");
     }
 
     public enum RunModus {

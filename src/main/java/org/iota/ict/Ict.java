@@ -4,24 +4,24 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.iota.ict.api.RestApi;
 import org.iota.ict.ec.EconomicCluster;
+import org.iota.ict.eee.*;
 import org.iota.ict.ixi.IxiModuleHolder;
 import org.iota.ict.model.tangle.RingTangle;
 import org.iota.ict.model.tangle.Tangle;
+import org.iota.ict.model.transaction.Transaction;
 import org.iota.ict.network.Neighbor;
 import org.iota.ict.network.Node;
 import org.iota.ict.network.gossip.GossipEvent;
-import org.iota.ict.network.gossip.GossipEventDispatcher;
-import org.iota.ict.network.gossip.GossipListener;
-import org.iota.ict.model.transaction.Transaction;
-import org.iota.ict.network.gossip.GossipPreprocessor;
 import org.iota.ict.std.BundleCollector;
 import org.iota.ict.utils.Constants;
+import org.iota.ict.utils.RestartableThread;
 import org.iota.ict.utils.Updater;
 import org.iota.ict.utils.properties.FinalProperties;
-import org.iota.ict.utils.RestartableThread;
 
 import java.net.InetSocketAddress;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * This class is the central component of the project. Each instance is an independent Ict node that can communicate with
@@ -31,8 +31,8 @@ import java.util.*;
 public class Ict extends RestartableThread implements IctInterface {
 
     // services
-    protected final GossipEventDispatcher eventDispatcher = new GossipEventDispatcher();
     protected final IxiModuleHolder moduleHolder = new IxiModuleHolder(Ict.this);
+    protected final ThreadedEffectDispatcherWithChainSupport effectDispatcher = new ThreadedEffectDispatcherWithChainSupport();
     protected final RestApi restApi;
     protected final EconomicCluster cluster;
     protected final Tangle tangle;
@@ -59,10 +59,12 @@ public class Ict extends RestartableThread implements IctInterface {
         this.restApi = new RestApi(this);
         this.cluster = new EconomicCluster(this);
 
-        subWorkers.add(eventDispatcher);
+        effectDispatcher.addChainedEnvironment(Constants.Environments.GOSSIP_PREPROCESSOR_CHAIN, Constants.Environments.GOSSIP);
+
         subWorkers.add(node);
         subWorkers.add(moduleHolder);
         subWorkers.add(restApi);
+        subWorkers.add(effectDispatcher);
         subWorkers.add(new BundleCollector(this));
 
         start();
@@ -84,7 +86,7 @@ public class Ict extends RestartableThread implements IctInterface {
                 LOGGER.debug("memory: " + Runtime.getRuntime().totalMemory() / 1024 / 1024 + "MB / " + Runtime.getRuntime().maxMemory() / 1024 / 1024 + "MB (total/max)");
                 LOGGER.debug("tangle size: " + tangle.size() + " (" + Transaction.getAmountOfInstances() + " transaction instances alive)");
                 node.log();
-                eventDispatcher.log();
+                effectDispatcher.log();
                 roundStart = System.currentTimeMillis();
             }
         }
@@ -97,17 +99,19 @@ public class Ict extends RestartableThread implements IctInterface {
         }
     }
 
-    /**
-     * Adds a listener to this object. Every {@link GossipEvent} will be passed on to the listener.
-     *
-     * @param gossipListener The listener to add.
-     */
-    public void addGossipListener(GossipListener gossipListener) {
-        eventDispatcher.listeners.add(gossipListener);
+    @Override
+    public void addListener(EffectListener listener) {
+        effectDispatcher.addListener(listener);
     }
 
-    public void removeGossipListener(GossipListener gossipListener) {
-        eventDispatcher.listeners.remove(gossipListener);
+    @Override
+    public void removeListener(EffectListener listener) {
+        effectDispatcher.removeListener(listener);
+    }
+
+    @Override
+    public void submitEffect(Environment environment, Object effect) {
+        effectDispatcher.submitEffect(environment, effect);
     }
 
     /**
@@ -147,7 +151,7 @@ public class Ict extends RestartableThread implements IctInterface {
      */
     public void submit(Transaction transaction) {
         tangle.createTransactionLogIfAbsent(transaction);
-        onGossipEvent(new GossipEvent(transaction, true));
+        submitEffect(Constants.Environments.GOSSIP_PREPROCESSOR_CHAIN, new ChainedEffectListenerImplementation.Output<>(Long.MIN_VALUE, new GossipEvent(transaction, true)));
     }
 
     public void request(String requestedHash) {
@@ -180,21 +184,6 @@ public class Ict extends RestartableThread implements IctInterface {
     @Override
     public Tangle getTangle() {
         return tangle;
-    }
-
-    @Override
-    public void onGossipEvent(GossipEvent event) {
-        eventDispatcher.notifyListeners(event);
-    }
-
-    @Override
-    public void addGossipPreprocessor(GossipPreprocessor gossipPreprocessor) {
-        eventDispatcher.addGossipPreprocessor(gossipPreprocessor);
-    }
-
-    @Override
-    public void removeGossipPreprocessor(GossipPreprocessor gossipPreprocessor) {
-        eventDispatcher.removeGossipPreprocessor(gossipPreprocessor);
     }
 
     @Override

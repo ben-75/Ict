@@ -1,29 +1,28 @@
 package org.iota.ict.ec;
 
-import org.iota.ict.Ict;
+import org.iota.ict.eee.Environment;
 import org.iota.ict.ixi.Ixi;
 import org.iota.ict.model.bundle.Bundle;
 import org.iota.ict.model.transaction.Transaction;
 import org.iota.ict.network.gossip.GossipEvent;
 import org.iota.ict.network.gossip.GossipFilter;
 import org.iota.ict.network.gossip.GossipListener;
+import org.iota.ict.utils.Constants;
 import org.iota.ict.utils.properties.FinalProperties;
 import org.iota.ict.utils.properties.PropertiesUser;
 
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class EconomicCluster implements GossipListener, PropertiesUser {
 
-    private final Ixi ict;
+    private final Ixi ixi;
     private Set<TrustedEconomicActor> actors = new HashSet<>();
     private final ECGossipFilter filter = new ECGossipFilter();
 
-    public EconomicCluster(Ict ict) {
-        this.ict = ict;
-        ict.addGossipListener(this);
+    public EconomicCluster(Ixi ixi) {
+        this.ixi = ixi;
+        ixi.addListener(this);
     }
 
     public void addActor(TrustedEconomicActor actor) {
@@ -62,15 +61,15 @@ public class EconomicCluster implements GossipListener, PropertiesUser {
     }
 
     private double calcMaxAbsTrust() {
-        double trustSUm = 0;
+        double trustSum = 0;
         for(TrustedEconomicActor actor : actors) {
-            trustSUm += actor.getTrust();
+            trustSum += actor.getTrust();
         }
-        return trustSUm;
+        return trustSum;
     }
 
     @Override
-    public void onGossipEvent(GossipEvent event) {
+    public void onReceive(GossipEvent event) {
         Transaction transaction = event.getTransaction();
 
         if(filter.passes(transaction)) {
@@ -88,6 +87,11 @@ public class EconomicCluster implements GossipListener, PropertiesUser {
         for(TrustedEconomicActor actor : actors) {
             actor.processTransaction(transaction);
         }
+    }
+
+    @Override
+    public Environment getEnvironment() {
+        return Constants.Environments.GOSSIP;
     }
 
     private class ECGossipFilter extends GossipFilter {

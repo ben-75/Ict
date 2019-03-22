@@ -3,6 +3,7 @@ package org.iota.ict.network;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.iota.ict.Ict;
+import org.iota.ict.eee.Environment;
 import org.iota.ict.network.gossip.GossipEvent;
 import org.iota.ict.utils.*;
 import org.iota.ict.model.tangle.Tangle;
@@ -44,12 +45,17 @@ public class Sender extends RestartableThread implements SenderInterface {
     }
 
     @Override
-    public void onGossipEvent(GossipEvent event) {
+    public void onReceive(GossipEvent event) {
         Tangle.TransactionLog log = node.ict.getTangle().createTransactionLogIfAbsent(event.getTransaction());
         if (!log.wasSent && log.senders.size() < node.neighbors.size()) {
             log.wasSent = true;
             queue(event.getTransaction());
         }
+    }
+
+    @Override
+    public Environment getEnvironment() {
+        return Constants.Environments.GOSSIP;
     }
 
     @Override

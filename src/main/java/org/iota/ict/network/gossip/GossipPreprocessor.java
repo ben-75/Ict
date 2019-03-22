@@ -1,23 +1,12 @@
 package org.iota.ict.network.gossip;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import org.iota.ict.eee.ChainedEffectListenerImplementation;
+import org.iota.ict.eee.EffectDispatcher;
+import org.iota.ict.utils.Constants;
 
-public class GossipPreprocessor {
+public class GossipPreprocessor extends ChainedEffectListenerImplementation<GossipEvent> implements GossipListener {
 
-    public final int position;
-    private GossipPreprocessor successor;
-    public final BlockingQueue<GossipEvent> incoming = new LinkedBlockingQueue<>();
-
-    public GossipPreprocessor(int position) {
-        this.position = position;
-    }
-
-    public void setSuccessor(GossipPreprocessor successor) {
-        this.successor = successor;
-    }
-
-    public void passOn(GossipEvent event) {
-        successor.incoming.add(event);
+    public GossipPreprocessor(EffectDispatcher dispatcher, int chainPosition) {
+        super(dispatcher, Constants.Environments.GOSSIP_PREPROCESSOR_CHAIN, chainPosition);
     }
 }
