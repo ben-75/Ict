@@ -100,7 +100,7 @@ public class Transaction {
         bundleNonce = builder.bundleNonce;
         trunkHash = builder.trunkHash;
         branchHash = builder.branchHash;
-        tag = Trytes.padRight(builder.tag,Transaction.Field.TAG.tryteLength);
+        tag = builder.tag;
         attachmentTimestamp = builder.attachmentTimestamp;
         attachmentTimestampLowerBound = builder.attachmentTimestampLowerBound;
         attachmentTimestampUpperBound = builder.attachmentTimestampUpperBound;
@@ -118,6 +118,7 @@ public class Transaction {
         isBundleHead = isFlagSet(hashTrits, Constants.HashFlags.BUNDLE_HEAD_FLAG);
         isBundleTail = isFlagSet(hashTrits, Constants.HashFlags.BUNDLE_TAIL_FLAG);
         assertMinWeightMagnitude(hashTrits);
+        compress(); // compress so fields will be right padded upon decompressiongit lo
     }
 
     /**
@@ -224,6 +225,7 @@ public class Transaction {
     }
 
     private static void putField(char[] target, Field field, String trytes) {
+        trytes = Trytes.padRight(trytes, field.tryteLength);
         assert trytes.length() == field.tryteLength;
         System.arraycopy(trytes.toCharArray(), 0, target, field.tryteOffset, field.tryteLength);
     }
@@ -363,8 +365,8 @@ public class Transaction {
     }
 
     public void setTrunk(Transaction trunk) {
-        if(trunk != null && !trunk.hash.equals(trunkHash))
-            throw new IllegalArgumentException("incorrect trunk");
+        if(trunk != null && !trunk.hash.equals(trunkHash()))
+            throw new IllegalArgumentException("incorrect trunk (expected: '" + trunk.hash + "' given: '" + trunkHash+"')");
         this.trunk = trunk;
     }
 }
